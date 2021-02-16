@@ -217,7 +217,7 @@ generate.initvect.rowcluster <- function(long.df, model, submodel, RG,
                gamma.init <- generate.gamma.init(RG=RG,p=p)
                # Initial guess for delta is zero
                initvect <- c(initvect,alpha.init,beta.init,gamma.init,0.0)
-           }
+           },
            stop("Invalid model for row/column clustering"))
 
     if (submodel %in% c("rp","rpi","rpid") & start.from.simple.model) {
