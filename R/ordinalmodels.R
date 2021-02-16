@@ -162,6 +162,24 @@ unpack.parvec <- function(invect, model, submodel, n, p, q, RG, CG=NULL, constra
                           parlist <- list(n=n,p=p,mu=mu,alpha=alpha,beta=beta,gamma=gamma)
                           nelts <- 1 + RG-1 + p-1 + (RG-1)*(p-1)
                       },
+                      "rpid"={
+                          beta <- invect[(1+RG-1+1):(1+RG-1+p-1)]
+                          if (constraint.sum.zero) beta <- c(beta, -sum(beta))
+                          else beta <- c(0, beta)
+
+                          gamma <- invect[(1+RG-1+p-1+1):(1+RG-1+p-1+(RG-1)*(p-1))]
+                          gamma <- matrix(gamma,nrow=RG-1,ncol=p-1,byrow=T)
+                          gamma <- cbind(gamma,-rowSums(gamma))
+                          # Original POM code had final row of gamma equal to negative
+                          # sum of other rows, but this code follows original OSM code,
+                          # has FIRST row of gamma equal to negative sum of other rows
+                          gamma <- rbind(-colSums(gamma),gamma)
+                          delta <- invect[(1+RG-1+p-1+(RG-1)*(p-1)+1)]
+                          x <- invect[(1+RG-1+p-1+(RG-1)*(p-1)+1+1):(1+RG-1+p-1+(RG-1)*(p-1)+1+1+n-1)]
+
+                          parlist <- list(n=n,p=p,mu=mu,alpha=alpha,beta=beta,gamma=gamma,delta=delta,x=x)
+                          nelts <- 1 + RG-1 + p-1 + (RG-1)*(p-1) + 1 + n
+                      },
                       "rc"={
                           beta <- invect[(1+RG-1+1):(1+RG-1+CG-1)]
                           if (constraint.sum.zero) beta <- c(beta, -sum(beta))
@@ -216,6 +234,7 @@ calc.theta <- function(parlist, model, submodel) {
                       "rs"=theta.Binary.rs(parlist),
                       "rp"=theta.Binary.rp(parlist),
                       "rpi"=theta.Binary.rpi(parlist),
+                      "rpid"=theta.Binary.rpid(parlist),
                       "rc"=theta.Binary.rc(parlist),
                       "rci"=theta.Binary.rci(parlist))
            })
@@ -571,6 +590,29 @@ theta.Binary.rpi <- function(parlist) {
     for (r in 1:RG){
         ## Normalize theta values
         theta[r,1:p,] <- theta[r,1:p,]/rowSums(theta[r,1:p,])
+    }
+
+    theta
+}
+
+theta.Binary.rpid <- function(parlist) {
+    p <- parlist$p
+    n <- parlist$n
+    RG <- length(parlist$alpha)
+
+    theta <- array(NA,c(n,p,RG,2))
+    theta[1:n,1:p,1:RG,1] <- 1
+    for(i in 1:n){
+    	for(j in 1:p){
+    		for(r in 1:RG){
+    			theta[i,j,r,2] <- exp(parlist$mu + (parlist$alpha[r] + parlist$beta[j] + parlist$gamma[r,j] + (parlist$delta * parlist$x[i])))
+    		}
+    	}
+    }
+    
+    for (r in 1:RG){
+        ## Normalize theta values
+        theta[1:n,1:p,r,] <- theta[1:n,1:p,r,]/rowSums(theta[1:n,1:p,r,])
     }
 
     theta
