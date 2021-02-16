@@ -206,7 +206,7 @@ unpack.parvec <- function(invect, model, submodel, n, p, q, RG, CG=NULL, constra
                       })
            })
 
-    if (length(invect) != nelts) warning(sprintf("invect is TOO LONG (%d), expected (%d). The parameters may have been specified incorrectly. Please double-check invect.", length(invect), nelts)
+    if (length(invect) != nelts) warning(sprintf("invect is TOO LONG (%d), expected (%d). The parameters may have been specified incorrectly. Please double-check invect.", length(invect), nelts))
 
     parlist
 }
