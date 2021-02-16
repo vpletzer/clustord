@@ -212,9 +212,15 @@ generate.initvect.rowcluster <- function(long.df, model, submodel, RG,
            "rpi"={
                gamma.init <- generate.gamma.init(RG=RG,p=p)
                initvect <- c(initvect,alpha.init,beta.init,gamma.init)
-           },stop("Invalid model for row/column clustering"))
+           },
+           "rpid"={
+               gamma.init <- generate.gamma.init(RG=RG,p=p)
+               # Initial guess for delta is zero
+               initvect <- c(initvect,alpha.init,beta.init,gamma.init,0.0)
+           }
+           stop("Invalid model for row/column clustering"))
 
-    if (submodel %in% c("rp","rpi") & start.from.simple.model) {
+    if (submodel %in% c("rp","rpi","rpid") & start.from.simple.model) {
         cat("Using the output of RS model as initial values for RP/RPI model\n")
 
         invect <- switch(model,

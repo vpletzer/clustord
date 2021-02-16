@@ -35,8 +35,8 @@ rowclustering <- function(formula,
                        "Y~row+column"="rp",
                        "Y~row+column+row:column"="rpi",
                        "Y~row*column"="rpi",
-                       "Y~row+column+row:column+x" = "rpid",
-                       "Y~row*column+x" = "rpid",
+                       "Y~row+column+row:column+x"="rpid",
+                       "Y~row*column+x"="rpid",
                        stop('Error in formula'))
 
     print(paste("EM algorithm for",model))
@@ -603,7 +603,7 @@ validate.inputs <- function(type,
     if (!("Y" %in% names(long.df))) stop("long.df must have a column named 'Y' which contains the response values.")
     if (!("ROW" %in% names(long.df))) stop("long.df must have a column named 'ROW' which indicates what observation (row in the data matrix) each value of Y corresponds to.")
     if (!("COL" %in% names(long.df))) stop("long.df must have a column named 'COL' which indicates what variable (column in the data matrix) each value of Y corresponds to.")
-
+    if ( (grepl("x", formula, fixed=TRUE)) & (!("X" %in% names(long.df))) ) stop("long.df must have a column named 'X' which is the covariate when 'x' is specified in the formula.")
     if (!is.factor(long.df$Y)) stop("long.df$Y must be a factor.")
 
     if (any(is.na(long.df$Y))) stop("long.df$Y has missing values (NA). Please delete these rows and try again.")

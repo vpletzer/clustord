@@ -35,7 +35,7 @@ create_data <- function(M, N, R, pi_r, theta_r, delta){
         }
     }
 
-    long.df <- data.frame(Y = factor(data), ROW = rows, COL = cols, COV = x, THETA = thetas)
+    long.df <- data.frame(Y = factor(data), ROW = rows, COL = cols, X = x, THETA = thetas)
     return(long.df)
 }
 
