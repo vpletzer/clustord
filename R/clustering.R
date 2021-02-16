@@ -35,6 +35,8 @@ rowclustering <- function(formula,
                        "Y~row+column"="rp",
                        "Y~row+column+row:column"="rpi",
                        "Y~row*column"="rpi",
+                       "Y~row+column+row:column+x" = "rpid",
+                       "Y~row*column+x" = "rpid",
                        stop('Error in formula'))
 
     print(paste("EM algorithm for",model))
@@ -260,7 +262,8 @@ columnclustering <- function(formula,
 #'     clustered under row clustering or biclustering or included as individual
 #'     row effects in the column clustering model, and \code{COL} is the factor
 #'     to be clustered under column clustering or biclustering,
-#'     or included as individual column effects in the row clustering model.
+#'     or included as individual column effects in the row clustering model. When a covariate is included,
+#'     column \code{X} is the covariate.
 #'     Typically, \code{ROW} will correspond to the row index and \code{COL} to
 #'     the column index of an original data matrix whose values are given by \code{Y}.
 #'
