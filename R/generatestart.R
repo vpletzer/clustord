@@ -229,7 +229,7 @@ generate.initvect.rowcluster <- function(long.df, model, submodel, RG,
                          "Binary"=initvect[1:(1+RG-1)])
 
         rs.out <- run.EM.rowcluster(invect=invect,
-                                    long.df, model=model,submodel="rs",
+                                    long.df,x=NULL,model=model,submodel="rs",
                                     pi.v=pi.init,
                                     EM.control=startEM.control(EM.control),
                                     optim.method=optim.method,
@@ -283,7 +283,7 @@ generate.initvect.bicluster <- function(long.df, model, submodel, RG, CG,
         cat("Fitting RS model to obtain starting values for alpha and pi.\n")
         rs.invect <- c(initvect, alpha.init)
         rs.out <- run.EM.rowcluster(invect=rs.invect,
-                                    long.df, model=model,submodel="rs",
+                                    long.df,x=NULL,model=model,submodel="rs",
                                     pi.v=pi.init,
                                     EM.control=startEM.control(EM.control),
                                     optim.method=optim.method,
@@ -300,7 +300,7 @@ generate.initvect.bicluster <- function(long.df, model, submodel, RG, CG,
                 and COL switched, to find starting values for beta and kappa.v\n")
         sc.invect <- c(initvect, beta.init)
         sc.out <- run.EM.rowcluster(invect=sc.invect,
-                                    long.df.transp, model=model,submodel="rs",
+                                    long.df.transp,x=NULL,model=model,submodel="rs",
                                     pi.v=kappa.init,
                                     EM.control=startEM.control(EM.control),
                                     optim.method=optim.method,
