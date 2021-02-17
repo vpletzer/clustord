@@ -749,6 +749,9 @@ run.EM.rowcluster <- function(invect, long.df, model, submodel, pi.v,
 
     parlist.in <- unpack.parvec(invect,model=model,submodel=submodel,n=n,p=p,q=q,RG=RG,
                                 constraint.sum.zero=constraint.sum.zero)
+    ################DEBUG##############
+    print(parlist.in)
+    ###################################
     if (any(sapply(parlist.in,function(elt) any(is.na(elt))))) stop("Error unpacking parameters for model.")
     if (any(sapply(parlist.in,function(elt) is.null(elt)))) stop("Error unpacking parameters for model.")
 
