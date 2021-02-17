@@ -1,15 +1,33 @@
-onemode.membership.pp <- function(long.df, theta, proportions, nelements, row){
+onemode.membership.pp <- function(long.df, theta, proportions, nelements, row, cov=FALSE){
+    #nelements is the number of rows
+    #nclus is the number of clusters
+
     nclus <- length(proportions)
     pp.m <- matrix(NA, nelements, nclus)
 
+    #replicates the row vector log(proportions) nelements times vertically
     pp.raw <- matrix(log(proportions),nelements,nclus,byrow=T)
 
+    #iterate over the rows
     for(idx in 1:nelements){
+        #idx is the row index (i)
+
+        #iterate over the clusters
         for(clus.idx in 1:nclus){
+            #clus.idx is r
+            
             yvals <- long.df$Y[long.df$ROW==idx]
             if (length(yvals) > 0) {
-                if (row) pp.raw[idx,clus.idx] <- pp.raw[idx,clus.idx] + sum(log(diag(theta[clus.idx,,yvals])))
-                else pp.raw[idx,clus.idx] <- pp.raw[idx,clus.idx] + sum(log(diag(theta[,clus.idx,yvals])))
+                if (row & !cov){ 
+                    pp.raw[idx,clus.idx] <- pp.raw[idx,clus.idx] + sum(log(diag(theta[clus.idx,,yvals])))
+                }
+                else if (row & cov){
+                    #row clustering with covariates. theta is index [i, j, r, 1:2]. The sum is over the j (column) index
+                    pp.raw[idx,clus.idx] <- pp.raw[idx,clus.idx] + sum(log(diag(theta[idx,,clus.idx,yvals])))
+                }
+                else{ 
+                    pp.raw[idx,clus.idx] <- pp.raw[idx,clus.idx] + sum(log(diag(theta[,clus.idx,yvals])))
+                }
             }
         }
     }

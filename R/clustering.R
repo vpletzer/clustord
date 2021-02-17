@@ -749,6 +749,8 @@ run.EM.rowcluster <- function(invect, long.df, x, model, submodel, pi.v,
     p <- max(long.df$COL)
     q <- length(levels(long.df$Y))
     RG <- length(pi.v)
+    #determine if covariate, x, is passed
+    cov <- !is.null(x)
 
     parlist.in <- unpack.parvec(invect,model=model,submodel=submodel,n=n,p=p,q=q,RG=RG,
                                 constraint.sum.zero=constraint.sum.zero)
@@ -774,7 +776,7 @@ run.EM.rowcluster <- function(invect, long.df, x, model, submodel, pi.v,
     while(!EM.status$finished)
     {
         # E-step - Update posterior probabilities
-        ppr.m <- onemode.membership.pp(long.df, theta.arr, pi.v, n, row=TRUE)
+        ppr.m <- onemode.membership.pp(long.df, theta.arr, pi.v, n, row=TRUE, cov=cov)
 
         ## Now set any NA values in the posterior probabilities matrix to 0
         ppr.m[is.na(ppr.m)] <- 0
