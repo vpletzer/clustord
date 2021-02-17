@@ -70,7 +70,7 @@ assignments <- function(pp.m) {
     assignments
 }
 
-calc.ll <- function(invect, long.df, y.mat, model, submodel, ppr.m, pi.v, RG,
+calc.ll <- function(invect, long.df, x, y.mat, model, submodel, ppr.m, pi.v, RG,
                     ppc.m=NULL, kappa.v=NULL, CG=NULL, constraint.sum.zero=TRUE,
                     partial=FALSE, SE.calc=FALSE) {
     n <- max(long.df$ROW)
@@ -80,17 +80,17 @@ calc.ll <- function(invect, long.df, y.mat, model, submodel, ppr.m, pi.v, RG,
     parlist <- unpack.parvec(invect,model=model,submodel=submodel,
                              n=n,p=p,q=q,RG=RG,CG=CG,constraint.sum.zero=constraint.sum.zero)
 
-    this.theta <- calc.theta(parlist,model=model,submodel=submodel)
+    this.theta <- calc.theta(parlist,model=model,submodel=submodel,x=x)
 
     if (SE.calc) {
-        if (submodel %in% c("rs","rp","rpi")) {
+        if (submodel %in% c("rs","rp","rpi","rpid")) {
             Rcluster.Incll(long.df, this.theta, pi.v, RG)
         } else if (submodel %in% c("rc","rci")) {
             Bicluster.IncllApprox(long.df=long.df, y.mat=y.mat, theta=this.theta,
                                   ppr.m=ppr.m, ppc.m=ppc.m, pi.v=pi.v, kappa.v=kappa.v)
         }
     } else {
-        if (submodel %in% c("rs","rp","rpi")) {
+        if (submodel %in% c("rs","rp","rpi","rpid")) {
             Rcluster.ll(long.df, y.mat, this.theta, ppr.m, pi.v, RG, partial=partial)
         } else if (submodel %in% c("rc","rci")) {
             Bicluster.ll(long.df, y.mat, this.theta, ppr.m, ppc.m, pi.v, kappa.v, partial=partial)

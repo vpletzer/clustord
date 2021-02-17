@@ -6,6 +6,7 @@ rowclustering <- function(formula,
                           model,
                           nclus.row,
                           long.df,
+                          x=NULL,
                           initvect=NULL,
                           pi.init=NULL,
                           EM.control=default.EM.control(),
@@ -15,7 +16,7 @@ rowclustering <- function(formula,
 
     validate.inputs(type="row",
                     formula=formula, model=model, nclus.row=nclus.row,
-                    long.df=long.df, initvect=initvect, pi.init=pi.init,
+                    long.df=long.df, x=x, initvect=initvect, pi.init=pi.init,
                     EM.control=EM.control, optim.method=optim.method,
                     constraint.sum.zero=constraint.sum.zero,
                     start.from.simple.model=start.from.simple.model,
@@ -45,7 +46,7 @@ rowclustering <- function(formula,
 
     if (is.null(initvect) | is.null(pi.init)) {
         ## generate.start will keep using whichever of initvect and pi.init is not null
-        start.par <- generate.start.rowcluster(long.df, model=model, submodel=submodel, RG=RG,
+        start.par <- generate.start.rowcluster(long.df, x=x, model=model, submodel=submodel, RG=RG,
                                                initvect=initvect, pi.init=pi.init,
                                                EM.control=EM.control,
                                                optim.method=optim.method,
@@ -57,7 +58,7 @@ rowclustering <- function(formula,
         pi.init <- start.par$pi.init
     }
 
-    run.EM.rowcluster(invect=initvect, long.df=long.df, model=model, submodel=submodel,
+    run.EM.rowcluster(invect=initvect, long.df=long.df, x=x, model=model, submodel=submodel,
                       pi.v=pi.init, constraint.sum.zero=constraint.sum.zero,
                       EM.control=EM.control,
                       optim.method=optim.method, optim.control=optim.control)
@@ -123,7 +124,7 @@ columnclustering <- function(formula,
         pi.init <- start.par$pi.init
     }
 
-    results <- run.EM.rowcluster(invect=initvect, long.df=long.df.transp,
+    results <- run.EM.rowcluster(invect=initvect, long.df=long.df.transp, x=NULL,
                                  model=model, submodel=submodel,
                                  pi.v=pi.init, constraint.sum.zero=constraint.sum.zero,
                                  EM.control=EM.control,
@@ -262,11 +263,10 @@ columnclustering <- function(formula,
 #'     clustered under row clustering or biclustering or included as individual
 #'     row effects in the column clustering model, and \code{COL} is the factor
 #'     to be clustered under column clustering or biclustering,
-#'     or included as individual column effects in the row clustering model. When a covariate is included,
-#'     column \code{X} is the covariate.
+#'     or included as individual column effects in the row clustering model. 
 #'     Typically, \code{ROW} will correspond to the row index and \code{COL} to
 #'     the column index of an original data matrix whose values are given by \code{Y}.
-#'
+#' @param x: covariate array of size nrow, only used when formula includes a covariate term x.
 #' @param initvect: (default NULL) vector of starting parameter values for the model.
 #'     Note: if the user enters an initial vector of parameter values, it is
 #'     \strong{strongly recommend} that the user also check the values of
@@ -564,6 +564,7 @@ validate.inputs <- function(type,
                             model,
                             nclus.row=NULL,nclus.column=NULL,
                             long.df,
+                            x=NULL,
                             initvect=NULL,
                             pi.init=NULL, kappa.init=NULL,
                             EM.control=default.EM.control(),
@@ -574,6 +575,8 @@ validate.inputs <- function(type,
 
     ## Note the double-& and double-| which stops the later parts being checked
     ## if the earlier parts are false
+
+    n <- max(long.df$ROW)
 
     if (!is.character(formula) || !is.vector(formula) || length(formula) != 1) stop("formula must be a string.")
 
@@ -603,7 +606,7 @@ validate.inputs <- function(type,
     if (!("Y" %in% names(long.df))) stop("long.df must have a column named 'Y' which contains the response values.")
     if (!("ROW" %in% names(long.df))) stop("long.df must have a column named 'ROW' which indicates what observation (row in the data matrix) each value of Y corresponds to.")
     if (!("COL" %in% names(long.df))) stop("long.df must have a column named 'COL' which indicates what variable (column in the data matrix) each value of Y corresponds to.")
-    if ( (grepl("x", formula, fixed=TRUE)) & (!("X" %in% names(long.df))) ) stop("long.df must have a column named 'X' which is the covariate when 'x' is specified in the formula.")
+    if ( (grepl("x", formula, fixed=TRUE)) & (is.null(x) | (length(x) != n) ) stop(sprintf("when covariate term 'x' is specified in the formula then covariate array 'x' must be provided and its length must be %d.", n))
     if (!is.factor(long.df$Y)) stop("long.df$Y must be a factor.")
 
     if (any(is.na(long.df$Y))) stop("long.df$Y has missing values (NA). Please delete these rows and try again.")
@@ -738,7 +741,7 @@ update.EM.status <- function(EM.status, new.llc, new.lli, invect, outvect,
     EM.status.out
 }
 
-run.EM.rowcluster <- function(invect, long.df, model, submodel, pi.v,
+run.EM.rowcluster <- function(invect, long.df, x, model, submodel, pi.v,
                               constraint.sum.zero=TRUE,
                               EM.control=default.EM.control(),
                               optim.method="L-BFGS-B", optim.control=default.optim.control()) {
@@ -755,7 +758,7 @@ run.EM.rowcluster <- function(invect, long.df, model, submodel, pi.v,
     if (any(sapply(parlist.in,function(elt) any(is.na(elt))))) stop("Error unpacking parameters for model.")
     if (any(sapply(parlist.in,function(elt) is.null(elt)))) stop("Error unpacking parameters for model.")
 
-    theta.arr <- calc.theta(parlist.in,model=model,submodel=submodel)
+    theta.arr <- calc.theta(parlist.in,model=model,submodel=submodel,x=x)
 
     y.mat <- df2mat(long.df)
 
@@ -784,6 +787,7 @@ run.EM.rowcluster <- function(invect, long.df, model, submodel, pi.v,
         optim.fit <- optim(par=invect,
                            fn=calc.ll,
                            long.df=long.df,
+                           x=x,
                            y.mat=y.mat,
                            model=model,
                            submodel=submodel,
@@ -796,7 +800,7 @@ run.EM.rowcluster <- function(invect, long.df, model, submodel, pi.v,
                            hessian=F,control=optim.control)
 
         outvect <- optim.fit$par
-        llc <- calc.ll(outvect,long.df=long.df,y.mat=y.mat,model=model,submodel=submodel,
+        llc <- calc.ll(outvect,long.df=long.df,x=x,y.mat=y.mat,model=model,submodel=submodel,
                         ppr.m,pi.v,RG, partial=FALSE)
 
         parlist.out <- unpack.parvec(outvect,model=model,submodel=submodel,n=n,p=p,q=q,RG=RG,
@@ -849,7 +853,7 @@ run.EM.rowcluster <- function(invect, long.df, model, submodel, pi.v,
          "RowClusters"=Rclus)
 }
 
-run.EM.bicluster <- function(invect, long.df, model, submodel, pi.v, kappa.v,
+run.EM.bicluster <- function(invect, long.df, x=NULL, model, submodel, pi.v, kappa.v,
                              constraint.sum.zero=TRUE,
                              EM.control=default.EM.control(),
                              optim.method="L-BFGS-B", optim.control=default.optim.control()) {
@@ -901,6 +905,7 @@ run.EM.bicluster <- function(invect, long.df, model, submodel, pi.v, kappa.v,
         optim.fit <- optim(par=invect,
                            fn=calc.ll,
                            long.df=long.df,
+                           x=x,
                            y.mat=y.mat,
                            model=model,
                            submodel=submodel,
@@ -917,7 +922,7 @@ run.EM.bicluster <- function(invect, long.df, model, submodel, pi.v, kappa.v,
 
         outvect <- optim.fit$par
 
-        llc <- calc.ll(outvect,long.df=long.df,y.mat=y.mat,model=model,submodel=submodel,
+        llc <- calc.ll(outvect,long.df=long.df, x=x, y.mat=y.mat,model=model,submodel=submodel,
                         ppr.m=ppr.m,pi.v=pi.v,RG=RG, ppc.m=ppc.m,kappa.v=kappa.v,CG=CG,
                         partial=FALSE)
 
@@ -989,6 +994,7 @@ calc.SE.rowcluster <- function(long.df, clust.out,
     optim.hess <- optimHess(par=outvect,
                        fn=calc.ll,
                        long.df=long.df,
+                       x=x,
                        y.mat=y.mat,
                        model=clust.out$model,
                        submodel=clust.out$submodel,
@@ -1039,7 +1045,7 @@ calc.SE.rowcluster <- function(long.df, clust.out,
 #'     The standard errors corresponding to the elements of \code{clust.out$outvect}.
 #' @describeIn calc.SE.bicluster SE for biclustering
 #' @export
-calc.SE.bicluster <- function(long.df, clust.out,
+calc.SE.bicluster <- function(long.df, x=NULL, clust.out,
                                optim.control=default.optim.control()) {
 
     optim.control$fnscale=-1
@@ -1050,6 +1056,7 @@ calc.SE.bicluster <- function(long.df, clust.out,
     optim.hess <- optimHess(par=outvect,
                        fn=calc.ll,
                        long.df=long.df,
+                       x=x,
                        y.mat=y.mat,
                        model=clust.out$model,
                        submodel=clust.out$submodel,

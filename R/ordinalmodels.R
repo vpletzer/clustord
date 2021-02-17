@@ -177,7 +177,7 @@ unpack.parvec <- function(invect, model, submodel, n, p, q, RG, CG=NULL, constra
                           delta <- invect[(1+RG-1+p-1+(RG-1)*(p-1)+1)]
                           x <- invect[(1+RG-1+p-1+(RG-1)*(p-1)+1+1):(1+RG-1+p-1+(RG-1)*(p-1)+1+1+n-1)]
 
-                          parlist <- list(n=n,p=p,mu=mu,alpha=alpha,beta=beta,gamma=gamma,delta=delta,x=x)
+                          parlist <- list(n=n,p=p,mu=mu,alpha=alpha,beta=beta,gamma=gamma,delta=delta)
                           nelts <- 1 + RG-1 + p-1 + (RG-1)*(p-1) + 1 
                       },
                       "rc"={
@@ -211,7 +211,7 @@ unpack.parvec <- function(invect, model, submodel, n, p, q, RG, CG=NULL, constra
     parlist
 }
 
-calc.theta <- function(parlist, model, submodel) {
+calc.theta <- function(parlist, model, submodel,x=NULL) {
     switch(model,
            "OSM"={
                switch(submodel,
@@ -234,7 +234,7 @@ calc.theta <- function(parlist, model, submodel) {
                       "rs"=theta.Binary.rs(parlist),
                       "rp"=theta.Binary.rp(parlist),
                       "rpi"=theta.Binary.rpi(parlist),
-                      "rpid"=theta.Binary.rpid(parlist),
+                      "rpid"=theta.Binary.rpid(parlist,x),
                       "rc"=theta.Binary.rc(parlist),
                       "rci"=theta.Binary.rci(parlist))
            })
@@ -595,7 +595,7 @@ theta.Binary.rpi <- function(parlist) {
     theta
 }
 
-theta.Binary.rpid <- function(parlist) {
+theta.Binary.rpid <- function(parlist,x) {
     p <- parlist$p
     n <- parlist$n
     RG <- length(parlist$alpha)
@@ -605,7 +605,7 @@ theta.Binary.rpid <- function(parlist) {
     for(i in 1:n){
     	for(j in 1:p){
     		for(r in 1:RG){
-    			theta[i,j,r,2] <- exp(parlist$mu + (parlist$alpha[r] + parlist$beta[j] + parlist$gamma[r,j] + (parlist$delta * parlist$x[i])))
+    			theta[i,j,r,2] <- exp(parlist$mu + (parlist$alpha[r] + parlist$beta[j] + parlist$gamma[r,j] + (parlist$delta * x[i])))
     		}
     	}
     }

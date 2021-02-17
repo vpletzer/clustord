@@ -14,7 +14,9 @@ create_data <- function(M, N, R, pi_r, theta_r, delta){
     rows <- rep(NA, N*M)
     cols <- rep(NA, N*M)
     thetas <- rep(NA, N*M)
-    x <- rnorm(N, mean = 4, sd =1) #covariate
+
+    #generate covariate
+    x <- rnorm(N, mean = 4, sd =1)
 
     for(i in 1:N) {
 
@@ -35,16 +37,21 @@ create_data <- function(M, N, R, pi_r, theta_r, delta){
         }
     }
 
-    long.df <- data.frame(Y = factor(data), ROW = rows, COL = cols, X = x, THETA = thetas)
-    return(long.df)
+    #THETA will be used to compute the MSE error
+    long.df <- data.frame(Y = factor(data), ROW = rows, COL = cols, THETA = thetas)
+
+    return(list("long.df" = long.df, "x" = x))
 }
 
-ex_rowclustering <- function(long.df){
+ex_rowclustering <- function(long.df, x){
     #cluster
-    #initvect <- c(mu, phi, alpha, beta)
-    results <- rowclustering("Y~row", model = "Binary", 
+    formula <- "Y~row+column+row:column+x"
+    #or "Y~row*column+x"
+
+    results <- rowclustering(formula, model = "Binary", 
                              nclus.row = R,
-                             long.df, initvect = NULL,
+                             long.df, x = x,
+                             initvect = NULL,
                              pi.init = pi_r,
                              EM.control = default.EM.control(),
                              optim.method = "L-BFGS-B", optim.control = default.optim.control(),
@@ -75,20 +82,20 @@ ex_rowclustering <- function(long.df){
 set.seed(123)
 
 #input
-N <- 100 # number of rows
-M <- 10 # number of columns
+N <- 10 # number of rows
+M <- 6 # number of columns
 
-# number of row clusters
+#number of row clusters
 R <- 2
 
-# probability of 1 for each cluster
-theta_r <- c(0.25, 0.75)
+#probability of 1 for each cluster
+theta_r <- c(0.2, 0.7)
 
-# row mixing ratio
+#row mixing ratio
 pi_r <- c(0.2, 0.8)
 
-long.df <- create_data(M, N, R, pi_r, theta_r, delta)
-theta.mse.error <- ex_rowclustering(long.df)
+data.list <- create_data(M, N, R, pi_r, theta_r, delta)
+theta.mse.error <- ex_rowclustering(long.df = data.list$long.df, x = data.list$x)
 
 print(sprintf("MSE(theta) = %.5g",theta.mse.error))
 
