@@ -606,7 +606,7 @@ validate.inputs <- function(type,
     if (!("Y" %in% names(long.df))) stop("long.df must have a column named 'Y' which contains the response values.")
     if (!("ROW" %in% names(long.df))) stop("long.df must have a column named 'ROW' which indicates what observation (row in the data matrix) each value of Y corresponds to.")
     if (!("COL" %in% names(long.df))) stop("long.df must have a column named 'COL' which indicates what variable (column in the data matrix) each value of Y corresponds to.")
-    if ( (grepl("x", formula, fixed=TRUE)) & (is.null(x) | (length(x) != n) ) stop(sprintf("when covariate term 'x' is specified in the formula then covariate array 'x' must be provided and its length must be %d.", n))
+    if ( (grepl("x", formula, fixed=TRUE)) & (is.null(x) | (length(x) != n)) ) stop(sprintf("when covariate term 'x' is specified in the formula then covariate array 'x' must be provided and its length must be %d.", n))
     if (!is.factor(long.df$Y)) stop("long.df$Y must be a factor.")
 
     if (any(is.na(long.df$Y))) stop("long.df$Y has missing values (NA). Please delete these rows and try again.")
