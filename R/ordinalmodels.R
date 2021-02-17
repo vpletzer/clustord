@@ -178,7 +178,7 @@ unpack.parvec <- function(invect, model, submodel, n, p, q, RG, CG=NULL, constra
                           x <- invect[(1+RG-1+p-1+(RG-1)*(p-1)+1+1):(1+RG-1+p-1+(RG-1)*(p-1)+1+1+n-1)]
 
                           parlist <- list(n=n,p=p,mu=mu,alpha=alpha,beta=beta,gamma=gamma,delta=delta,x=x)
-                          nelts <- 1 + RG-1 + p-1 + (RG-1)*(p-1) + 1 + n
+                          nelts <- 1 + RG-1 + p-1 + (RG-1)*(p-1) + 1 
                       },
                       "rc"={
                           beta <- invect[(1+RG-1+1):(1+RG-1+CG-1)]
