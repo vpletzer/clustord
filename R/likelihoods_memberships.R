@@ -101,17 +101,21 @@ calc.ll <- function(invect, long.df, x, y.mat, model, submodel, ppr.m, pi.v, RG,
     this.theta <- calc.theta(parlist,model=model,submodel=submodel,x=x)
 
     if (SE.calc) {
-        if (submodel %in% c("rs","rp","rpi","rpid")) {
+        if (submodel %in% c("rs","rp","rpi")) {
             Rcluster.Incll(long.df, this.theta, pi.v, RG)
         } else if (submodel %in% c("rc","rci")) {
             Bicluster.IncllApprox(long.df=long.df, y.mat=y.mat, theta=this.theta,
                                   ppr.m=ppr.m, ppc.m=ppc.m, pi.v=pi.v, kappa.v=kappa.v)
+        } else if (submodel %in% c("rpid")){
+            Rcluster.Incll.rpid(long.df, this.theta, pi.v, RG)
         }
     } else {
-        if (submodel %in% c("rs","rp","rpi","rpid")) {
+        if (submodel %in% c("rs","rp","rpi")) {
             Rcluster.ll(long.df, y.mat, this.theta, ppr.m, pi.v, RG, partial=partial)
         } else if (submodel %in% c("rc","rci")) {
             Bicluster.ll(long.df, y.mat, this.theta, ppr.m, ppc.m, pi.v, kappa.v, partial=partial)
+        } else if (submodel %in% c("rpid")){
+            Rcluster.ll.rpid(long.df, y.mat, this.theta, ppr.m, pi.v, RG, partial=partial)
         }
     }
 }
@@ -146,6 +150,40 @@ Rcluster.ll <- function(long.df, y.mat, theta, ppr.m, pi.v, RG, partial=FALSE){
     llc
 }
 
+Rcluster.ll.rpid <- function(long.df, y.mat, theta, ppr.m, pi.v, RG, partial=FALSE){
+    n <- max(long.df$ROW)
+    p <- max(long.df$COL)
+    q <- length(levels(long.df$Y))
+
+    theta[theta<=0]=lower.limit
+    pi.v[pi.v==0]=lower.limit
+    llc=0
+    for (r in 1:RG) {
+        # theta.y.mat <- sapply(1:p,function(j) {
+        #     yvals <- as.numeric(long.df$Y[long.df$COL==j])
+        #     theta[r,j,yvals]
+        # }) ## <-- THIS IS VERY VERY SLOW
+        # llc <- llc + sum(t(ppr.m[,r])%*%log(theta.y.mat))
+        log.theta.y.mat <- sapply(1:p,function(j) {
+
+            raw.log.theta <- log(theta[,j,r,y.mat[,j]])
+            raw.log.theta[is.na(raw.log.theta) | is.infinite(raw.log.theta)] <- 0
+            raw.log.theta
+        })
+        print(theta)
+        print(log.theta.y.mat)
+        print(ppr.m)
+        llc <- llc + sum(t(ppr.m[,r])%*%log.theta.y.mat)
+    }
+    if (!partial) llc <- llc + sum(ppr.m%*%log(pi.v))
+    
+    if (!is.finite(llc)) browser()
+
+    #llc <- rcpparma_Rclusterll(y.mat, theta, ppr.m, pi.v, RG, p, n, as.numeric(partial))
+
+    llc
+}
+
 Rcluster.Incll <- function(long.df, theta, pi.v, RG)
 {
     n <- max(long.df$ROW)
@@ -162,6 +200,32 @@ Rcluster.Incll <- function(long.df, theta, pi.v, RG)
             if (length(yvals) >= 1) {
                 if (length(yvals) == 1) th <- theta[r,,yvals]
                 else if (length(yvals) > 1) th <- diag(theta[r,,yvals])
+                log.components[r] <- log(pi.v[r]) + sum(log(th),na.rm=TRUE)
+            }
+        }
+        log.sumoverR <- log(sum(exp(log.components - max(log.components)))) + max(log.components)
+        logl <- logl + log.sumoverR
+    }
+    if (logl == 0) logl <- -1E-40
+    logl
+}
+
+Rcluster.Incll.rpid <- function(long.df, theta, pi.v, RG)
+{
+    n <- max(long.df$ROW)
+    p <- max(long.df$COL)
+    q <- length(levels(long.df$Y))
+
+    theta[theta<=0]=lower.limit
+    pi.v[pi.v==0]=lower.limit
+    logl = 0
+    for(i in 1:n){
+        log.components <- rep(0,RG)
+        for(r in 1:RG){
+            yvals <- long.df$Y[long.df$ROW==i]
+            if (length(yvals) >= 1) {
+                if (length(yvals) == 1) th <- theta[i,,r,yvals]
+                else if (length(yvals) > 1) th <- diag(theta[i,,r,yvals])
                 log.components[r] <- log(pi.v[r]) + sum(log(th),na.rm=TRUE)
             }
         }

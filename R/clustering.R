@@ -812,7 +812,15 @@ run.EM.rowcluster <- function(invect, long.df, x, model, submodel, pi.v,
         ## Note that UNLIKE Rcluster.ll, Rcluster.Incll outputs the *actual*
         ## log-likelihood, not the negative of the log-likelihood, so don't need
         ## to make it negative here
-        lli <- Rcluster.Incll(long.df, theta.arr, pi.v, RG)
+
+        if(submodel %in% c("rpid")){
+          lli <- Rcluster.Incll.rpid(long.df, theta.arr, pi.v, RG)
+
+          }
+          else{
+            lli <- Rcluster.Incll(long.df, theta.arr, pi.v, RG)
+          }
+        
 
         EM.status <- update.EM.status(EM.status,new.llc=llc,new.lli=lli,
                                       parlist.out=parlist.out,

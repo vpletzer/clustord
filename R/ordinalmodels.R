@@ -175,7 +175,6 @@ unpack.parvec <- function(invect, model, submodel, n, p, q, RG, CG=NULL, constra
                           # has FIRST row of gamma equal to negative sum of other rows
                           gamma <- rbind(-colSums(gamma),gamma)
                           delta <- invect[(1+RG-1+p-1+(RG-1)*(p-1)+1)]
-                          x <- invect[(1+RG-1+p-1+(RG-1)*(p-1)+1+1):(1+RG-1+p-1+(RG-1)*(p-1)+1+1+n-1)]
 
                           parlist <- list(n=n,p=p,mu=mu,alpha=alpha,beta=beta,gamma=gamma,delta=delta)
                           nelts <- 1 + RG-1 + p-1 + (RG-1)*(p-1) + 1 
