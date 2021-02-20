@@ -807,7 +807,7 @@ run.EM.rowcluster <- function(invect, long.df, x, model, submodel, pi.v,
 
         parlist.out <- unpack.parvec(outvect,model=model,submodel=submodel,n=n,p=p,q=q,RG=RG,
                                      constraint.sum.zero=constraint.sum.zero)
-        theta.arr <- calc.theta(parlist.out,model=model,submodel=submodel)
+        theta.arr <- calc.theta(parlist.out,model=model,submodel=submodel, x=x)
 
         ## Note that UNLIKE Rcluster.ll, Rcluster.Incll outputs the *actual*
         ## log-likelihood, not the negative of the log-likelihood, so don't need

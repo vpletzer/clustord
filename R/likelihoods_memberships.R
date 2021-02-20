@@ -127,25 +127,25 @@ Rcluster.ll <- function(long.df, y.mat, theta, ppr.m, pi.v, RG, partial=FALSE){
 
     theta[theta<=0]=lower.limit
     pi.v[pi.v==0]=lower.limit
-    # llc=0
-    # for (r in 1:RG) {
-    #     # theta.y.mat <- sapply(1:p,function(j) {
-    #     #     yvals <- as.numeric(long.df$Y[long.df$COL==j])
-    #     #     theta[r,j,yvals]
-    #     # }) ## <-- THIS IS VERY VERY SLOW
-    #     # llc <- llc + sum(t(ppr.m[,r])%*%log(theta.y.mat))
-    #     log.theta.y.mat <- sapply(1:p,function(j) {
-    #         raw.log.theta <- log(theta[r,j,y.mat[,j]])
-    #         raw.log.theta[is.na(raw.log.theta) | is.infinite(raw.log.theta)] <- 0
-    #         raw.log.theta
-    #     })
-    #     llc <- llc + sum(t(ppr.m[,r])%*%log.theta.y.mat)
-    # }
-    # if (!partial) llc <- llc + sum(ppr.m%*%log(pi.v))
-    #
-    # if (!is.finite(llc)) browser()
+    llc=0
+    for (r in 1:RG) {
+        # theta.y.mat <- sapply(1:p,function(j) {
+        #     yvals <- as.numeric(long.df$Y[long.df$COL==j])
+        #     theta[r,j,yvals]
+        # }) ## <-- THIS IS VERY VERY SLOW
+        # llc <- llc + sum(t(ppr.m[,r])%*%log(theta.y.mat))
+        log.theta.y.mat <- sapply(1:p,function(j) {
+            raw.log.theta <- log(theta[r,j,y.mat[,j]])
+            raw.log.theta[is.na(raw.log.theta) | is.infinite(raw.log.theta)] <- 0
+            raw.log.theta
+        })
+        llc <- llc + sum(t(ppr.m[,r])%*%log.theta.y.mat)
+    }
+    if (!partial) llc <- llc + sum(ppr.m%*%log(pi.v))
+    
+    if (!is.finite(llc)) browser()
 
-    llc <- rcpparma_Rclusterll(y.mat, theta, ppr.m, pi.v, RG, p, n, as.numeric(partial))
+    #llc <- rcpparma_Rclusterll(y.mat, theta, ppr.m, pi.v, RG, p, n, as.numeric(partial))
 
     llc
 }
@@ -155,26 +155,39 @@ Rcluster.ll.rpid <- function(long.df, y.mat, theta, ppr.m, pi.v, RG, partial=FAL
     p <- max(long.df$COL)
     q <- length(levels(long.df$Y))
 
+
+    log.theta.y.mat <- matrix(NA, nrow=n, ncol=p)
     theta[theta<=0]=lower.limit
     pi.v[pi.v==0]=lower.limit
     llc=0
+ 
     for (r in 1:RG) {
         # theta.y.mat <- sapply(1:p,function(j) {
         #     yvals <- as.numeric(long.df$Y[long.df$COL==j])
         #     theta[r,j,yvals]
         # }) ## <-- THIS IS VERY VERY SLOW
         # llc <- llc + sum(t(ppr.m[,r])%*%log(theta.y.mat))
-        log.theta.y.mat <- sapply(1:p,function(j) {
+        
+        # log.theta.y.mat <- sapply(1:p,function(j) {
 
-            raw.log.theta <- log(theta[,j,r,y.mat[,j]])
-            raw.log.theta[is.na(raw.log.theta) | is.infinite(raw.log.theta)] <- 0
-            raw.log.theta
-        })
-        print(theta)
-        print(log.theta.y.mat)
-        print(ppr.m)
+        #     raw.log.theta <- log(theta[i,j,r,y.mat[,j]])
+        #     raw.log.theta[is.na(raw.log.theta) | is.infinite(raw.log.theta)] <- 0
+        #     raw.log.theta
+        # })
+        for (i in 1:n){
+            for (j in 1:p) {
+                raw.log.theta <- log(theta[i,j,r,y.mat[i,j]])
+                raw.log.theta[is.na(raw.log.theta) | is.infinite(raw.log.theta)] <- 0
+                #if( is.na(raw.log.theta) | is.infinite(raw.log.theta) ) raw.log.theta <- 0
+                log.theta.y.mat[i, j] <- raw.log.theta
+            }
+        }
+        print(sprintf("*** nrow(log.theta.y.mat)=%d ncol(log.theta.y.mat)=%d", nrow(log.theta.y.mat), ncol(log.theta.y.mat)))
         llc <- llc + sum(t(ppr.m[,r])%*%log.theta.y.mat)
     }
+
+    
+ 
     if (!partial) llc <- llc + sum(ppr.m%*%log(pi.v))
     
     if (!is.finite(llc)) browser()
