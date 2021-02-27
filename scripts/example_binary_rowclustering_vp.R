@@ -129,18 +129,26 @@ ex_rowclustering <- function(formula, long.df, row.covariate, pi_r){
 
 
 #########################
+
+
+#####
+
+#CASE 1, NO INGRAINED COVARIATE EFFECT
+
+####
+
 set.seed(123)
 
 #input
-N <- 10 # 40 number of rows
-M <- 10 # 40 number of columns
+N <- 100 # 40 number of rows
+M <- 40 # 40 number of columns
 
 # number of row clusters
 R <- 2
 
-mu.in <- 0.
-alpha_r.in <- c(0, 0)
-delta.in <- 1.0
+mu.in <- 1
+alpha_r.in <- c(-1, 1)
+delta.in <- 0
 
 # row mixing ratio
 pi_r.in <- c(0.5, 0.5)
