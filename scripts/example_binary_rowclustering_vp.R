@@ -132,8 +132,8 @@ ex_rowclustering <- function(formula, long.df, row.covariate, pi_r){
 set.seed(123)
 
 #input
-N <- 40 # number of rows
-M <- 40 # number of columns
+N <- 10 # number of rows
+M <- 20 # number of columns
 
 # number of row clusters
 R <- 2
@@ -149,7 +149,7 @@ ns[R] <- N - sum(ns[1:(R-1)]) #ensures sum of ns values is N because rounding ca
 #covariate 
 #set 1s for first group, second group all zeros
 row.covariate <- rep(1, N)
-row.covariate[1:ns[1]] <- -0
+row.covariate[1:ns[1]] <- -1
 
 data.list <- create_data(M, N, R, pi_r=pi_r.in, mu=mu.in, alpha_r=alpha_r.in, 
     delta=delta.in, row.covariate=row.covariate, ns=ns)
@@ -171,5 +171,5 @@ print(sprintf("r=%2d mu=%8.4f alpha_r=%8.4f delta=%8.4f",
 
 print(sprintf("sqrt MSE(theta) = %.5g",sqrt(out$theta.mse.error)))
 
-print(out$results)
-#cluster_acc(data.list$true.membership, out$results$ppr)
+#print(out$results)
+cluster_acc(data.list$true.membership, out$results$ppr)
