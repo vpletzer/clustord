@@ -20,6 +20,41 @@ onemode.membership.pp <- function(long.df, theta, proportions, nelements, row){
     pp.m
 }
 
+onemode.membership.pp.rsd <- function(long.df, pi_r, parlist, row.covariate){
+
+    n <- max(long.df$ROW)
+    p <- max(long.df$COL)
+    R <- length(pi_r)
+    pp.m <- matrix(NA, nrow=n, ncol=R)
+
+    for(r in 1:R){
+        for(i in 1:n){
+
+            #logit theta for this group and row
+            Gamma_ri <- parlist$mu + parlist$alpha[r] + parlist$delta*row.covariate[i]
+
+            # get the data for this row
+            yvals <- long.df$Y[long.df$ROW == i]
+            num_ones <- sum(yvals == 1)
+
+            #for Bernoulli and using logit
+            pp.m[i, r] <- pi_r[r] * exp(num_ones * Gamma_ri) / (1. + Gamma_ri)
+
+            print(sprintf("E-STEP rsd: r=%d i=%d mu=%f alpha=%f delta=%f x=%f num_ones=%d", 
+                    r, i, parlist$mu, parlist$alpha[r], parlist$delta, row.covariate[i], 
+                    num_ones))
+
+        }
+    }
+
+    #normalize
+    for(i in 1:n){
+        pp.m[i, 1:R] <- pp.m[i, 1:R] / sum(pp.m[i, 1:R])
+    }
+
+    return(pp.m)
+}
+
 twomode.membership.pp <- function(long.df, theta, pi.v, kappa.v, nclus, row) {
     n <- max(long.df$ROW)
     p <- max(long.df$COL)

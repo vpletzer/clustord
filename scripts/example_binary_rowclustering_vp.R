@@ -154,6 +154,8 @@ row.covariate[1:ns[1]] <- -1
 data.list <- create_data(M, N, R, pi_r=pi_r.in, mu=mu.in, alpha_r=alpha_r.in, 
     delta=delta.in, row.covariate=row.covariate, ns=ns)
 
+print(data.list$long.df)
+
 formula <- "Y~row+row.covariate"
 #formula <- "Y~row"
 
