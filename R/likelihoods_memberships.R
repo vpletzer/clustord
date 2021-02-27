@@ -1,12 +1,24 @@
 onemode.membership.pp <- function(long.df, theta, proportions, nelements, row){
+
+    #DEBUG
+    #return(onemode.membership.pp.rsd.ap(long.df, theta, proportions, nelements))
+    #return(onemode.membership.pp.vp(long.df, theta, proportions, nelements,row))
+    print(dim(theta))
+    return(onemode.membership.pp.rsd(long.df, theta, proportions, nelements,row))
     nclus <- length(proportions)
     pp.m <- matrix(NA, nelements, nclus)
 
     pp.raw <- matrix(log(proportions),nelements,nclus,byrow=T)
 
+    #iterate over the rows
     for(idx in 1:nelements){
+
+        #iterate over the clusters (groups)
         for(clus.idx in 1:nclus){
+
+            #get all the data values for this row
             yvals <- long.df$Y[long.df$ROW==idx]
+
             if (length(yvals) > 0) {
                 if (row) pp.raw[idx,clus.idx] <- pp.raw[idx,clus.idx] + sum(log(diag(theta[clus.idx,,yvals])))
                 else pp.raw[idx,clus.idx] <- pp.raw[idx,clus.idx] + sum(log(diag(theta[,clus.idx,yvals])))
@@ -19,6 +31,110 @@ onemode.membership.pp <- function(long.df, theta, proportions, nelements, row){
     pp.m <- pp.m/rowSums(pp.m)
     pp.m
 }
+
+onemode.membership.pp.rsd <- function(long.df, theta, proportions, nelements, row){
+
+    #DEBUG
+    #return(onemode.membership.pp.rsd.ap(long.df, theta, proportions, nelements))
+    print(theta)
+    nclus <- length(proportions)
+    pp.m <- matrix(NA, nelements, nclus)
+
+    pp.raw <- matrix(log(proportions),nelements,nclus,byrow=T)
+
+    #iterate over the rows
+    for(idx in 1:nelements){
+
+        #iterate over the clusters (groups)
+        for(clus.idx in 1:nclus){
+
+            #get all the data values for this row
+            yvals <- long.df$Y[long.df$ROW==idx]
+
+            if (length(yvals) > 0) {
+                if (row) pp.raw[idx,clus.idx] <- pp.raw[idx,clus.idx] + sum(log(diag(theta[clus.idx,,yvals,idx])))
+                else pp.raw[idx,clus.idx] <- pp.raw[idx,clus.idx] + sum(log(diag(theta[clus.idx,,yvals,idx])))
+            }
+        }
+    }
+    for(idx in 1:nelements) pp.m[idx,] <- pp.raw[idx,] - log(sum(exp(pp.raw[idx,] + min(abs(pp.raw[idx,]))))) + min(abs(pp.raw[idx,]))
+
+    pp.m <- exp(pp.m)
+    pp.m <- pp.m/rowSums(pp.m)
+    pp.m
+}
+
+onemode.membership.pp.rsd.ap <- function(long.df, theta, proportions, nelements){
+
+    R <- length(proportions)
+    p <- max(long.df$COL) # 
+
+    pp.raw <- matrix(log(proportions), nelements, R, byrow=TRUE)
+
+    for (r in 1:R) {
+        for (i in 1:nelements){
+
+            log.theta.y.sum <- 0
+            for (j in 1:p) {
+
+                yval <- long.df$Y[ long.df$ROW == i & long.df$COL == j]
+
+                raw.log.theta <- log( theta[r, i, yval] )
+                raw.log.theta[is.na(raw.log.theta) | is.infinite(raw.log.theta)] <- 0
+                #if( is.na(raw.log.theta) | is.infinite(raw.log.theta) ) raw.log.theta <- 0
+
+                log.theta.y.sum <- log.theta.y.sum + raw.log.theta
+            }
+            pp.raw[i, r] <- pp.raw[i, r] + log.theta.y.sum
+        }
+
+    }
+
+    pp.raw <- exp(pp.raw)
+
+    #normalize
+    for (i in 1:nelements){
+
+        #sum across a row
+        norm <- sum(pp.raw[i, 1:R])
+
+        #divide the row by the normalization
+        pp.raw[i, 1:R] <- pp.raw[i, 1:R] / norm
+    }
+
+    return(pp.raw)
+ 
+}
+
+
+# onemode.membership.pp.rsd.vp <- function(long.df, theta, proportions, nelements){ #(data, Z, Theta){
+#     #return: E(Z_ig)
+#     #N <- nrow(data)
+#     #P <- ncol(data)
+#     #G <- ncol(Z)
+#     R <- length(proportions)
+#     p <- max(long.df$COL)
+#     pp.raw <- matrix(nrow = nelements, ncol = R)
+#     #pi.g <- colSums(Z)/N # size G
+    
+#     for (r in 1:R){
+#         for (i in 1:N) {
+#             for(j in 1:p){
+#                 yval <- long.df$Y[ long.df$ROW == i & long.df$COL == j]
+#                 numer <- proportions[r] * prod(theta[r,i,]^data[i,] * (1-theta[r,])^(1-data[i,]))
+#                 denom <- 0
+#                 for (rp in 1:R) {
+#                 denom <- denom + proportions[rp] * prod(theta[rp,]^data[i,] * (1-theta[rp,])^(1-data[i,]))
+#                 }
+
+#             }
+#             pp.raw[i, r] <- numer / denom
+#         }
+#     }
+
+#     return(pp.raw)
+# }
+
 
 twomode.membership.pp <- function(long.df, theta, pi.v, kappa.v, nclus, row) {
     n <- max(long.df$ROW)
@@ -178,7 +294,7 @@ Rcluster.ll.rsd <- function(long.df, y.mat, theta, ppr.m, pi.v, RG, partial=FALS
 
         for (i in 1:n){
             for (j in 1:p) {
-                raw.log.theta <- log(theta[r,i,y.mat[i,j]])
+                raw.log.theta <- log(theta[r,j,y.mat[i,j],i])
                 raw.log.theta[is.na(raw.log.theta) | is.infinite(raw.log.theta)] <- 0
                 #if( is.na(raw.log.theta) | is.infinite(raw.log.theta) ) raw.log.theta <- 0
                 log.theta.y.mat[i, j] <- raw.log.theta
@@ -223,7 +339,7 @@ Rcluster.Incll.rsd <- function(long.df, theta, pi.v, RG)
                 #     th <- diag(theta[r,,yvals])
                 # }
                 for (j in 1:p) {
-                    th[j] <- theta[r,i,yvals[j]]
+                    th[j] <- theta[r,j,yvals[j],i]
                 }
 
                 log.components[r] <- log(pi.v[r]) + sum(log(th),na.rm=TRUE)

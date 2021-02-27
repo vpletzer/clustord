@@ -544,22 +544,43 @@ theta.Binary.rs <- function(parlist) {
     theta
 }
 
+# theta.Binary.rsd <- function(parlist,row.covariate) {
+#     n <- parlist$n
+#     p <- parlist$p
+#     RG <- length(parlist$alpha)
+
+#     theta <- array(NA, c(RG,n,2))
+#     theta[1:RG,1:n,1] <- 1
+#     for(r in 1:RG){
+#     	for(i in 1:n){
+#     		theta[r,i,2] <- exp(parlist$mu + parlist$alpha[r] + parlist$delta*row.covariate[i])
+#     	}
+        
+#     }
+#     for (r in 1:RG){
+#         ## Normalize theta values
+#         theta[r,1:n,] <- theta[r,1:n,]/rowSums(theta[r,1:n,])
+#     }
+
+#     theta
+# }
+
 theta.Binary.rsd <- function(parlist,row.covariate) {
     n <- parlist$n
     p <- parlist$p
     RG <- length(parlist$alpha)
 
-    theta <- array(NA, c(RG,n,2))
-    theta[1:RG,1:n,1] <- 1
+    theta <- array(NA, c(RG,p,2,n))
+    theta[1:RG,1:p,1,1:n] <- 1
     for(r in 1:RG){
     	for(i in 1:n){
-    		theta[r,i,2] <- exp(parlist$mu + parlist$alpha[r] + parlist$delta*row.covariate[i])
+    		theta[r,1:p,2,i] <- exp(parlist$mu + parlist$alpha[r] + parlist$delta*row.covariate[i])
     	}
         
     }
     for (r in 1:RG){
         ## Normalize theta values
-        theta[r,1:n,] <- theta[r,1:n,]/rowSums(theta[r,1:n,])
+        theta[r,1:p,,1:n] <- theta[r,1:p,,1:n]/rowSums(theta[r,1:p,,1:n])
     }
 
     theta
