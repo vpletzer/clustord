@@ -781,6 +781,8 @@ run.EM.rowcluster <- function(invect, long.df, row.covariate, model, submodel, p
         else{
           ppr.m <- onemode.membership.pp(long.df, theta.arr, pi.v, n, row=TRUE)
         }
+        print("======== ppr.m ==========")
+        print(ppr.m)
 
         ## Now set any NA values in the posterior probabilities matrix to 0
         ppr.m[is.na(ppr.m)] <- 0

@@ -38,7 +38,7 @@ onemode.membership.pp.rsd <- function(long.df, pi_r, parlist, row.covariate){
             num_ones <- sum(yvals == 1)
 
             #for Bernoulli and using logit
-            pp.m[i, r] <- pi_r[r] * exp(num_ones * Gamma_ri) / (1. + Gamma_ri)
+            pp.m[i, r] <- pi_r[r] * exp(num_ones * Gamma_ri) / (1. + exp(Gamma_ri))
 
             print(sprintf("E-STEP rsd: r=%d i=%d mu=%f alpha=%f delta=%f x=%f num_ones=%d", 
                     r, i, parlist$mu, parlist$alpha[r], parlist$delta, row.covariate[i], 
@@ -47,10 +47,15 @@ onemode.membership.pp.rsd <- function(long.df, pi_r, parlist, row.covariate){
         }
     }
 
+    print("======before normalization===")
+    print(pp.m)
+
     #normalize
     for(i in 1:n){
         pp.m[i, 1:R] <- pp.m[i, 1:R] / sum(pp.m[i, 1:R])
     }
+    print("======after normalization===")
+    print(pp.m)
 
     return(pp.m)
 }
